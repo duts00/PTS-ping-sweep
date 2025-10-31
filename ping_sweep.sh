@@ -9,7 +9,7 @@
 
 !/bin/bash
 #validando o input do usuário fornecido o ping! 
-if ["$1" == ""]     #se o estiver em branco ' '.
+if ["$1" == ""];     #se o estiver em branco ' '.
 then                #então ele irar printar tudo do echo.
 
     echo"SEGURITY DUTS00 - PING SWEEP"
