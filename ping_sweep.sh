@@ -1,31 +1,40 @@
-#objetivo: 
-
-#cria um script para descobrir o hosts ativos utilizando o ping.
-
-#o usuário deve informar a rede e o script deve retornar os hosts que respondem ao ping. 
-
-# pra dar permissão da automação usamos chmod +x ping.sweep.sh
-# pra excutar ./ping.sweep.sh
-
 #!/bin/bash
-#validando o input do usuário fornecido o ping! 
-if [ "$1" == "" ];     #se o estiver em branco ' '.
-then                #então ele irar printar tudo do echo.
+#
+# ping-sweep.sh - Descobre hosts ativos em uma rede /24 usando ICMP (ping).
+#
+# Objetivo: o usuario informa a rede (3 primeiros octetos) e o script percorre
+# os hosts de .1 a .254, listando os que respondem ao ping.
+#
+# Uso:     ./ping-sweep.sh REDE
+# Exemplo: ./ping-sweep.sh 192.168.0
+#
+# Estudo de seguranca - usar apenas em redes proprias ou autorizadas.
 
-    echo"SEGURITY DUTS00 - PING SWEEP"
-    echo"modo de uso: $0 REDE"
-    echo "EXEMPLO: $0 192.168.0"   #exemplo de class c 192.169.0 que contem de 254 host.
+set -u
 
-else # se nao sera exibido ação que queremos ! 
-
-# vamos criar a ação 
-for host in {1..254};
-do 
-ping -c $1.$host; | grep "64 bytes" | cut -d " " -f 4 | sed 's/.$//'; #  mais limpo a saida com mais agregação de codigos! 
-done
+# --- Validacao do argumento ---
+if [ -z "${1:-}" ]; then
+    echo "_____ DUTS00 SECURITY - PING SWEEP _____"
+    echo "Modo de uso: $0 REDE"
+    echo "Exemplo:     $0 192.168.0"
+    exit 1
 fi
 
-# podemos usar cut, sed, grep...
+REDE="$1"
 
-# podemos deixar o mais limpo a saida com mais agregação de codigos ou apenas deixar (ping -c $1.$host;) ! 
+echo "[*] Varrendo a rede $REDE.0/24 ..."
+echo "---------------------------------------------"
 
+ativos=0
+
+for host in {1..254}; do
+    alvo="$REDE.$host"
+    # -c 1: envia 1 pacote | -W 1: espera no maximo 1s pela resposta
+    if ping -c 1 -W 1 "$alvo" >/dev/null 2>&1; then
+        echo "[+] $alvo esta ativo"
+        ativos=$((ativos + 1))
+    fi
+done
+
+echo "---------------------------------------------"
+echo "[ok] Concluido. $ativos host(s) ativo(s) em $REDE.0/24."
